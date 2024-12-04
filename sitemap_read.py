@@ -3,7 +3,8 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 from PyPDF2 import PdfReader
-from io import BytesIO
+import tempfile
+import pandas as pd
 
 # Helper function to read the sitemap and extract URLs
 def extract_urls_from_sitemap(sitemap_path):
@@ -32,13 +33,28 @@ def extract_text_from_pdf(url):
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
-        pdf_reader = PdfReader(BytesIO(response.content))
+
+        # Save PDF temporarily to file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
+            temp_pdf.write(response.content)
+            temp_pdf_path = temp_pdf.name
+
+        # Extract text from the temporary PDF file
         text = ""
+        pdf_reader = PdfReader(temp_pdf_path)
         for page in pdf_reader.pages:
             text += page.extract_text()
+
+        # Delete the temporary file
+        os.remove(temp_pdf_path)
         return text
     except Exception as e:
         return f"Error extracting text from PDF: {e}"
+
+# Helper function to convert data to CSV
+def convert_to_csv(data):
+    df = pd.DataFrame(data)
+    return df.to_csv(index=False)
 
 # Main Streamlit App
 st.title("Sitemap Web Page and PDF Text Extractor")
@@ -71,16 +87,13 @@ else:
 
         # Display results in a table
         st.markdown("### Extracted Text Data")
-        st.write(data)
+        st.write(pd.DataFrame(data))
+
+        # Add download button for CSV
+        csv_data = convert_to_csv(data)
         st.download_button(
             "Download as CSV",
-            data=convert_to_csv(data),
+            data=csv_data,
             file_name="extracted_data.csv",
             mime="text/csv",
         )
-
-# Helper function to convert data to CSV
-def convert_to_csv(data):
-    import pandas as pd
-    df = pd.DataFrame(data)
-    return df.to_csv(index=False)
