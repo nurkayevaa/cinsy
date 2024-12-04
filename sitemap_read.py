@@ -1,21 +1,29 @@
-import os
-import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 from PyPDF2 import PdfReader
-import tempfile
+import streamlit as st
 import pandas as pd
+import tempfile
+import os
 
-# Helper function to read the sitemap and extract URLs
-def extract_urls_from_sitemap(sitemap_path):
+# Helper function to fetch sitemap content from a URL
+def fetch_sitemap(url):
     try:
-        with open(sitemap_path, "r") as file:
-            sitemap_content = file.read()
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        return response.content
+    except Exception as e:
+        st.error(f"Error fetching sitemap: {e}")
+        return None
+
+# Helper function to extract URLs from sitemap content
+def extract_urls_from_sitemap(sitemap_content):
+    try:
         soup = BeautifulSoup(sitemap_content, "xml")
         urls = [loc.text for loc in soup.find_all("loc")]
         return urls
     except Exception as e:
-        st.error(f"Error reading sitemap: {e}")
+        st.error(f"Error parsing sitemap: {e}")
         return []
 
 # Helper function to extract text from a web page
@@ -59,16 +67,14 @@ def convert_to_csv(data):
 # Main Streamlit App
 st.title("Sitemap Web Page and PDF Text Extractor")
 
-# Input file path for the sitemap
-sitemap_path = os.path.expanduser("~/sitemap_public_services_only.xml")
-st.markdown(f"Sitemap File Path: `{sitemap_path}`")
+# Define the sitemap URL
+sitemap_url = "https://raw.githubusercontent.com/nurkayevaa/cinsy/refs/heads/main/sitemap_public_services_only.xml"
+st.markdown(f"Sitemap URL: `{sitemap_url}`")
 
-# Check if sitemap file exists
-if not os.path.exists(sitemap_path):
-    st.error("Sitemap file not found in the home directory. Please ensure the file exists.")
-else:
-    # Extract URLs from the sitemap
-    urls = extract_urls_from_sitemap(sitemap_path)
+# Fetch and parse the sitemap
+sitemap_content = fetch_sitemap(sitemap_url)
+if sitemap_content:
+    urls = extract_urls_from_sitemap(sitemap_content)
     
     if not urls:
         st.error("No URLs found in the sitemap.")
@@ -83,7 +89,7 @@ else:
                     text = extract_text_from_pdf(url)
                 else:
                     text = extract_text_from_webpage(url)
-                data.append({"Link": url, "Text": text[:500]})  # Limiting text to 500 chars for display
+                data.append({"Link": url, "Text": text[:500]})  # Limit text to 500 characters for display
 
         # Display results in a table
         st.markdown("### Extracted Text Data")
