@@ -19,7 +19,8 @@ def fetch_sitemap(url):
 # Helper function to extract URLs from sitemap content
 def extract_urls_from_sitemap(sitemap_content):
     try:
-        soup = BeautifulSoup(sitemap_content, "xml")
+        # Use 'lxml' parser to handle XML content
+        soup = BeautifulSoup(sitemap_content, "lxml")
         urls = [loc.text for loc in soup.find_all("loc")]
         return urls
     except Exception as e:
