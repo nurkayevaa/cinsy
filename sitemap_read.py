@@ -3,8 +3,7 @@ from bs4 import BeautifulSoup
 from PyPDF2 import PdfReader
 import streamlit as st
 import pandas as pd
-import tempfile
-import os
+import io
 
 # Helper function to fetch sitemap content from a URL
 def fetch_sitemap(url):
@@ -37,25 +36,21 @@ def extract_text_from_webpage(url):
     except Exception as e:
         return f"Error extracting text: {e}"
 
-# Helper function to extract text from a PDF
+# Helper function to extract text from a PDF (without using tempfile)
 def extract_text_from_pdf(url):
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
 
-        # Save PDF temporarily to file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
-            temp_pdf.write(response.content)
-            temp_pdf_path = temp_pdf.name
+        # Read PDF content directly into memory using BytesIO
+        pdf_file = io.BytesIO(response.content)
+        pdf_reader = PdfReader(pdf_file)
 
-        # Extract text from the temporary PDF file
+        # Extract text from the PDF
         text = ""
-        pdf_reader = PdfReader(temp_pdf_path)
         for page in pdf_reader.pages:
             text += page.extract_text()
 
-        # Delete the temporary file
-        os.remove(temp_pdf_path)
         return text
     except Exception as e:
         return f"Error extracting text from PDF: {e}"
