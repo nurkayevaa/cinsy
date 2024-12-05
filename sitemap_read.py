@@ -4,6 +4,7 @@ from PyPDF2 import PdfReader
 import streamlit as st
 import pandas as pd
 import io
+import re
 
 # Helper function to fetch sitemap content from a URL
 def fetch_sitemap(url):
@@ -16,7 +17,15 @@ def fetch_sitemap(url):
         return None
 
 # Helper function to extract URLs from sitemap content
-import re
+def extract_urls_from_sitemap(sitemap_content):
+    try:
+        # Use BeautifulSoup to parse the XML content
+        soup = BeautifulSoup(sitemap_content, "html.parser")  # Can be "xml" if lxml is installed
+        urls = [loc.text for loc in soup.find_all("loc")]
+        return urls
+    except Exception as e:
+        st.error(f"Error parsing sitemap: {e}")
+        return []
 
 # Helper function to extract text from a web page, looking for classes with either "main" or "mura"
 def extract_text_from_webpage(url):
@@ -33,18 +42,6 @@ def extract_text_from_webpage(url):
         # Join all the text from these elements into a single string
         return " ".join(text_elements) if text_elements else "No relevant text found with class 'main' or 'mura'."
     
-    except Exception as e:
-        return f"Error extracting text: {e}"
-
-
-
-# Helper function to extract text from a web page
-def extract_text_from_webpage(url):
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, "html.parser")
-        return soup.get_text(strip=True)
     except Exception as e:
         return f"Error extracting text: {e}"
 
