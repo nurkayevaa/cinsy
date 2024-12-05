@@ -10,7 +10,8 @@ api_key = st.secrets["OPENAI_API_KEY"]
 # Configure OpenAI
 openai.api_key = api_key
 
-st.set_page_config(page_title="Chatbot with CSV Data", page_icon="🤖")
+# Set up the Streamlit page layout
+st.set_page_config(page_title="Chatbot with CSV Data", page_icon="🤖", layout="wide")
 st.title("Chatbot with CSV Data")
 
 # Load CSV
@@ -26,13 +27,6 @@ except Exception as e:
 if "link" not in data.columns or "text" not in data.columns:
     st.error("The CSV file must contain 'link' and 'text' columns.")
     st.stop()
-
-# Preview data
-st.markdown("### Preview of the Data")
-st.write(data.head())
-
-st.markdown("### Ask a Question")
-question = st.text_input("Enter your question:")
 
 # Function to find the most relevant context based on cosine similarity
 def find_relevant_context(question, texts, top_n=5):
@@ -60,19 +54,29 @@ def generate_response(question, context):
     except Exception as e:
         return f"Error generating response: {e}"
 
+# Main Chat Interface
+st.markdown("### Chat with the Assistant")
+
+question = st.text_area("Type your question:", height=100)
+
 if question:
     # Find the most relevant context
     with st.spinner("Finding relevant context..."):
         relevant_context, relevant_indices = find_relevant_context(question, data["text"].dropna().tolist())
     
     if relevant_context:
-        st.markdown("### Relevant Context")
+        st.markdown("#### Relevant Context")
         st.write(relevant_context)
 
         # Generate the response
         with st.spinner("Generating response..."):
             answer = generate_response(question, relevant_context)
-        st.markdown("### Response")
+        
+        st.markdown("#### Response")
         st.write(answer)
+
     else:
         st.warning("No relevant context found in the dataset.")
+
+# To make it more chat-like, clear and centered, you could also include:
+st.markdown("<style> .css-1d391g3 { display: none; } </style>", unsafe_allow_html=True)  # Hides Streamlit default footer
