@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 from PyPDF2 import PdfReader
 import streamlit as st
 import pandas as pd
-import io
 
 # Helper function to fetch sitemap content from a URL
 def fetch_sitemap(url):
@@ -18,8 +17,8 @@ def fetch_sitemap(url):
 # Helper function to extract URLs from sitemap content
 def extract_urls_from_sitemap(sitemap_content):
     try:
-        # Use 'lxml' parser to handle XML content
-        soup = BeautifulSoup(sitemap_content, "lxml")
+        # Use 'xml' parser to handle XML content
+        soup = BeautifulSoup(sitemap_content, "xml")
         urls = [loc.text for loc in soup.find_all("loc")]
         return urls
     except Exception as e:
@@ -36,18 +35,15 @@ def extract_text_from_webpage(url):
     except Exception as e:
         return f"Error extracting text: {e}"
 
-# Helper function to extract text from a PDF (without using tempfile)
+# Helper function to extract text from a PDF
 def extract_text_from_pdf(url):
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
 
-        # Read PDF content directly into memory using BytesIO
-        pdf_file = io.BytesIO(response.content)
-        pdf_reader = PdfReader(pdf_file)
-
-        # Extract text from the PDF
+        # Read PDF content from response
         text = ""
+        pdf_reader = PdfReader(io.BytesIO(response.content))
         for page in pdf_reader.pages:
             text += page.extract_text()
 
