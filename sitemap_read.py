@@ -18,13 +18,14 @@ def fetch_sitemap(url):
 # Helper function to extract URLs from sitemap content
 def extract_urls_from_sitemap(sitemap_content):
     try:
-        # Use 'xml' parser to handle XML content
-        soup = BeautifulSoup(sitemap_content, "xml")
+        # Use 'html.parser' if 'lxml' is not available
+        soup = BeautifulSoup(sitemap_content, "html.parser")  # Change this line
         urls = [loc.text for loc in soup.find_all("loc")]
         return urls
     except Exception as e:
         st.error(f"Error parsing sitemap: {e}")
         return []
+
 
 # Helper function to extract text from a web page
 def extract_text_from_webpage(url):
