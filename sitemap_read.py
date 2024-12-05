@@ -91,7 +91,7 @@ if sitemap_content:
                     text = extract_text_from_pdf(url)
                 else:
                     text = extract_text_from_webpage(url)
-                data.append({"Link": url, "Text": text[:500]})  # Limit text to 500 characters for display
+                data.append({"Link": url, "Text": text})  # Limit text to 500 characters for display
 
         # Display results in a table
         st.markdown("### Extracted Text Data")
