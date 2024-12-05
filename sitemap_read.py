@@ -16,15 +16,26 @@ def fetch_sitemap(url):
         return None
 
 # Helper function to extract URLs from sitemap content
-def extract_urls_from_sitemap(sitemap_content):
+import re
+
+# Helper function to extract text from a web page, looking for classes with either "main" or "mura"
+def extract_text_from_webpage(url):
     try:
-        # Use 'html.parser' if 'lxml' is not available
-        soup = BeautifulSoup(sitemap_content, "html.parser")  # Change this line
-        urls = [loc.text for loc in soup.find_all("loc")]
-        return urls
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        # Find elements with class names that contain either "main" or "mura"
+        text_elements = []
+        for element in soup.find_all(class_=re.compile(r'.*(main|mura).*', re.IGNORECASE)):
+            text_elements.append(element.get_text(strip=True))
+
+        # Join all the text from these elements into a single string
+        return " ".join(text_elements) if text_elements else "No relevant text found with class 'main' or 'mura'."
+    
     except Exception as e:
-        st.error(f"Error parsing sitemap: {e}")
-        return []
+        return f"Error extracting text: {e}"
+
 
 
 # Helper function to extract text from a web page
