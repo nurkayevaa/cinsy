@@ -29,13 +29,13 @@ if "link" not in data.columns or "text" not in data.columns:
     st.stop()
 
 # Function to find the most relevant context based on cosine similarity
-def find_relevant_context(question, texts, links, top_n=5):
+def find_relevant_context(question, texts, top_n=3):  # Adjusted to return top 3 links
     vectorizer = TfidfVectorizer(stop_words="english")
     text_vectors = vectorizer.fit_transform(texts)  # Fit and transform text column
     question_vector = vectorizer.transform([question])  # Transform the question
     similarities = cosine_similarity(question_vector, text_vectors).flatten()  # Compute cosine similarity
     top_indices = similarities.argsort()[-top_n:][::-1]  # Get top N most similar indices
-    relevant_links = [links[i] for i in top_indices if similarities[i] > 0]
+    relevant_links = [data["link"].iloc[i] for i in top_indices if similarities[i] > 0]
     return relevant_links
 
 # Function to generate a chatbot response
@@ -43,7 +43,7 @@ def generate_response(question, context):
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4",
-            messages=[
+            messages=[ 
                 {"role": "system", "content": "You are a helpful assistant trained on a dataset."},
                 {"role": "user", "content": f"Context: {context}\n\nQuestion: {question}"},
             ],
@@ -60,21 +60,24 @@ st.markdown("### Chat with the Assistant")
 question = st.text_area("Type your question:", height=100)
 
 if question:
-    # Find the most relevant links
+    # Find the most relevant links based on cosine similarity
     with st.spinner("Finding relevant links..."):
-        relevant_links = find_relevant_context(question, data["text"].dropna().tolist(), data["link"].dropna().tolist())
+        relevant_links = find_relevant_context(question, data["text"].dropna().tolist())
     
     if relevant_links:
-        st.markdown("### Relevant Links")
-        for link in relevant_links:
-            st.markdown(f"- [{link}]({link})")  # Display links as clickable URLs
-
-        # Generate the response based on the relevant context
+        # Generate the response
         with st.spinner("Generating response..."):
-            answer = generate_response(question, " ".join(relevant_links))
-        
-        st.markdown("### Response")
+            answer = generate_response(question, " ".join(relevant_links))  # Provide links as context to the AI
+            
+        st.markdown("#### Response")
         st.write(answer)
 
+        st.markdown("#### Relevant Links")
+        for link in relevant_links:
+            st.write(f"- [{link}]({link})")
+
     else:
-        st.warning("No relevant links found in the dataset.")
+        st.warning("No relevant context found in the dataset.")
+
+# To make it more chat-like, clear and centered, you could also include:
+st.markdown("<style> .css-1d391g3 { display: none; } </style>", unsafe_allow_html=True)  # Hides Streamlit default footer
