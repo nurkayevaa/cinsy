@@ -70,7 +70,7 @@ def convert_to_csv(data):
 st.title("Sitemap Web Page and PDF Text Extractor")
 
 # Define the sitemap URL
-sitemap_url = "https://raw.githubusercontent.com/nurkayevaa/cinsy/refs/heads/main/sitemap_public_services_only.xml"
+sitemap_url = "https://raw.githubusercontent.com/nurkayevaa/cinsy/refs/heads/main/sitemap_public_services.xml"
 st.markdown(f"Sitemap URL: `{sitemap_url}`")
 
 # Fetch and parse the sitemap
