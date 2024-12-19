@@ -84,14 +84,24 @@ if sitemap_content:
         st.success(f"Found {len(urls)} URLs in the sitemap.")
         data = []
 
-        # Process each URL
+        # Initialize the progress bar
+        progress_bar = st.progress(0)
+        total_urls = len(urls)
+
+        # Process each URL with progress tracking
         with st.spinner("Processing URLs..."):
-            for url in urls:
+            for idx, url in enumerate(urls):
                 if url.endswith(".pdf"):
                     text = extract_text_from_pdf(url)
                 else:
                     text = extract_text_from_webpage(url)
-                data.append({"link": url, "text": text})  # Limit text to 500 characters for display
+                data.append({"link": url, "text": text})
+                
+                # Update the progress bar
+                progress_bar.progress((idx + 1) / total_urls)
+
+        # Complete the progress bar
+        progress_bar.empty()  # Removes the progress bar once complete
 
         # Display results in a table
         st.markdown("### Extracted Text Data")
